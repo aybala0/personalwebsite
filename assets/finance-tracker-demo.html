@@ -439,7 +439,7 @@ function renderNav() {
     const active = S.tab === name;
     const badge = name === "Inbox" && !active && inboxCount > 0
       ? `<span class="nav-badge">${inboxCount}</span>` : "";
-    return `<button class="nav-btn" style="color:${active ? "#000" : "rgba(0,0,0,.4)"}" onclick="setTab('${name}')">
+    return `<button data-region="nav-${name.toLowerCase()}" class="nav-btn" style="color:${active ? "#000" : "rgba(0,0,0,.4)"}" onclick="setTab('${name}')">
       ${NAV_ICONS[name]}<span class="nav-label">${name}</span>${badge}
     </button>`;
   }).join("");
@@ -632,7 +632,7 @@ function inboxRow(t, matched) {
       </div>`
     : "";
 
-  return `<div style="border-top:2px solid #000;padding:14px 0;">
+  return `<div data-region="inbox-label" style="border-top:2px solid #000;padding:14px 0;">
     <div style="display:flex;align-items:flex-start;gap:12px;">
       <div style="min-width:0;flex:1;">
         <div class="uc" style="margin-bottom:4px;font:400 9.5px 'Space Mono',monospace;letter-spacing:.14em;color:rgba(0,0,0,.62);">${fmtDayMonth(t.date)}</div>

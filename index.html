@@ -84,7 +84,8 @@ main.wrap{padding-top:50px;padding-bottom:96px;}
 
 /* ---- project grid ---- */
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-.grid-tight{margin-top:28px;}
+.grid-title{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-0.01em;
+  color:var(--ink);margin:28px 0 16px;}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;
   display:flex;flex-direction:column;transition:border-color .18s;}
 .card:hover{border-color:var(--ink);}
@@ -110,8 +111,9 @@ main.wrap{padding-top:50px;padding-bottom:96px;}
 .rlist{display:flex;flex-direction:column;}
 .ritem{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
   padding:20px 0;border-bottom:1px solid var(--line);}
+.ritem:last-child{border-bottom:none;}
 .ritem h3{margin:0 0 4px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;}
-.ritem p{margin:0;color:var(--muted);font-size:15px;max-width:70ch;}
+.ritem p{margin:0;color:var(--muted);font-size:15px;max-width:none;}
 .ritem .rlink{white-space:nowrap;color:#4d4e26;font-weight:700;font-size:14.5px;
   text-decoration:underline;text-underline-offset:2px;padding-top:4px;}
 .ritem .rlink:hover{color:var(--ink);}
@@ -232,22 +234,26 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
             <li>worked part time (20 hr/week) at SteelSeries in the Insights Team,</li>
             <li>worked part time (15 hr/week) as a Teaching Assistant for intro CS courses, all 3 quarters,</li>
             <li>went to school, my favorite classes were Operating Systems, Marketing Management, and Introduction to Formal Languages. </li>
+            <li>interned at Numerator as a Technical Product Management Intern during summer </li>
+            <li>participated and arranged choral music as part of <a href="https://www.youtube.com/live/G0GAnfknf0A?si=JdTd66zRjtldtRQK&t=2923" target="_blank" rel="noopener" style="text-decoration:underline;">UChicago Women's Ensemble</a> </li>
           </ul>
           <p>This year will even be a greater one. I will:</p>
           <ul class="hero-list">
-            <li>work part time at Numerator in the Data Extraction team, driving LLM based automation </li>
+            <li>continue my work at Numerator part time in the Data Extraction team, driving LLM based automation </li>
             <li>work as the Collaborative Learning Leader for intro CS courses, leading a team of 15 TA's</li>
-            <li>go to school, I'm most excited take Network Systems and a HCI class. </li>
+            <li>go to school, I'm most excited take Network Systems and an HCI class, </li>
+            <li>continue with choir, bouldering and taking care of my houseplants.</li>
           </ul>
         </div>
         <img class="hero-photo" src="assets/aybala-picture.jpg" alt="Aybala Esmer">
       </div>
     </div>
 
-    <div id="grid" class="grid grid-tight"></div>
+    <h2 class="grid-title">Projects I'm most proud of</h2>
+    <div id="grid" class="grid"></div>
 
     <div class="sec">
-      <div class="sec-head"><h2>Research &amp; technical</h2></div>
+      <div class="sec-head"><h2>Research &amp; Other Projects</h2></div>
       <div id="research" class="rlist"></div>
     </div>
   </section>
@@ -300,12 +306,17 @@ const PROJECTS = [
       "inbox-teaser":"Shortcut to transactions still waiting to be categorized.",
       "inbox-rows":"Newly synced transactions — categorize each one, tier first, then category.",
       "inbox-rules":"Merchant-matching rules pre-fill category and tier for known transactions.",
+      "inbox-label":"Tap to categorize this transaction — set its tier, category, and whether it's shared.",
       "categories-pie":"Tap a slice to see just that category's transactions.",
       "categories-month":"Switch to a different month's spending.",
       "categories-drill":"Every transaction in this category — tap Edit to recategorize.",
       "analysis-chart":"Spending trend over time — hover a point to see that period's total.",
       "analysis-controls":"Change the time range and how it's grouped — day, week, or month.",
-      "analysis-categories":"Choose which categories to plot on the chart."
+      "analysis-categories":"Choose which categories to plot on the chart.",
+      "nav-home":"Overview of net worth and this month's spending.",
+      "nav-inbox":"Categorize newly synced transactions.",
+      "nav-categories":"Browse spending by category and month.",
+      "nav-analysis":"Track spending trends over time."
     },
     video:null,
     code:"https://github.com/aybala0/tracker",
