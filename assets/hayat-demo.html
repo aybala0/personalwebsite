@@ -1,0 +1,556 @@
+<title>Hayat Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #e7e7e5; margin: 0; }
+  .phone { width: 420px; max-width: 100vw; height: 100vh; max-height: 860px; margin: 0 auto; background: #F9FAFB; overflow: hidden; position: relative; box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+  .scroller { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  ::-webkit-scrollbar { display: none; }
+</style>
+
+<div class="phone" id="phone"></div>
+
+<script>
+/* ============================== CONFIG / DATA MODEL ============================== */
+const ME = "Aybala";
+const OTHER = "your partner";
+const TAGS = [
+  { label: "Food & Drinks", emoji: "🍔" },
+  { label: "Groceries", emoji: "🛒" },
+  { label: "Rent & Bills", emoji: "🏠" },
+  { label: "Car", emoji: "🛞" },
+  { label: "Transportation", emoji: "🚗" },
+  { label: "Fun", emoji: "🎉" },
+  { label: "Shopping", emoji: "🛍️" },
+  { label: "Travel", emoji: "✈️" },
+  { label: "Other", emoji: "📦" },
+];
+const tagValue = (t) => `${t.emoji} ${t.label}`;
+
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(77);
+const pick = (arr) => arr[Math.floor(rng() * arr.length)];
+const round2 = (n) => Math.round(n * 100) / 100;
+function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+
+const MERCHANTS = {
+  "Food & Drinks": ["Sushi Nakazawa", "Shake Shack", "Blue Bottle Coffee", "Joe's Pizza", "The Dead Rabbit"],
+  "Groceries": ["Trader Joes", "Whole Foods", "Key Food"],
+  "Rent & Bills": ["ConEd Electric", "Internet Bill", "Spectrum Wireless"],
+  "Car": ["Jiffy Lube", "New Tires", "Car Wash"],
+  "Transportation": ["Uber", "Parking Garage", "Gas Station"],
+  "Fun": ["Movie Tickets", "Concert Tickets", "Bowling Night"],
+  "Shopping": ["Target", "Amazon", "IKEA"],
+  "Travel": ["Airbnb Chicago", "Delta Flight", "Hotel Marriott"],
+  "Other": ["Venmo - Gift", "CVS Pharmacy", "USPS Shipping"],
+};
+const NOTES_POOL = ["", "", "", "for the trip", "split as usual", "his half of the bill", "will settle up later"];
+
+let nextId = 1;
+const expenses = [];
+const TODAY = new Date();
+for (let i = 0; i < 22; i++) {
+  const d = new Date(TODAY);
+  d.setDate(d.getDate() - Math.floor(rng() * 45));
+  const tag = pick(TAGS);
+  const desc = pick(MERCHANTS[tag.label]);
+  const amount = round2(6 + rng() * 180);
+  const paidBy = rng() < 0.55 ? ME : OTHER;
+  const r = rng();
+  let aylasShare, erdemsShare;
+  if (r < 0.7) { aylasShare = round2(amount / 2); erdemsShare = round2(amount - aylasShare); }
+  else if (r < 0.85) { aylasShare = paidBy === ME ? 0 : amount; erdemsShare = round2(amount - aylasShare); }
+  else { const pct = 20 + Math.floor(rng() * 60); aylasShare = round2(amount * pct / 100); erdemsShare = round2(amount - aylasShare); }
+  expenses.push({
+    id: "e" + nextId++,
+    date: ymd(d),
+    description: desc,
+    tag: tagValue(tag),
+    amount,
+    paidBy,
+    aylasShare,
+    erdemsShare,
+    notes: pick(NOTES_POOL),
+  });
+}
+function byDateDesc(a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; }
+expenses.sort(byDateDesc);
+
+/* ============================== BALANCE / SPLIT LOGIC ============================== */
+function computeBalance() {
+  let raw = 0;
+  for (const e of expenses) {
+    if (e.paidBy === ME) raw += e.erdemsShare;
+    else raw -= e.aylasShare;
+  }
+  if (raw > 0.005) return { amount: raw, direction: "owed", otherName: OTHER };
+  if (raw < -0.005) return { amount: -raw, direction: "owe", otherName: OTHER };
+  return { amount: 0, direction: "square", otherName: OTHER };
+}
+function computeShares(splitOption, amount, myPercent, customPaidBy) {
+  switch (splitOption) {
+    case "50/50-me": return { paidBy: ME, aylasShare: round2(amount / 2), erdemsShare: round2(amount / 2) };
+    case "50/50-them": return { paidBy: OTHER, aylasShare: round2(amount / 2), erdemsShare: round2(amount / 2) };
+    case "full-me": return { paidBy: ME, aylasShare: 0, erdemsShare: amount };
+    case "full-them": return { paidBy: OTHER, aylasShare: amount, erdemsShare: 0 };
+    case "custom": {
+      const myShare = round2(amount * (myPercent / 100));
+      const theirShare = round2(amount - myShare);
+      return { paidBy: customPaidBy === "me" ? ME : OTHER, aylasShare: myShare, erdemsShare: theirShare };
+    }
+  }
+}
+function detectInitialState(expense) {
+  const myShare = expense.aylasShare, theirShare = expense.erdemsShare;
+  const iPaid = expense.paidBy === ME;
+  const half = expense.amount / 2;
+  if (Math.abs(expense.aylasShare - half) < 0.02 && Math.abs(expense.erdemsShare - half) < 0.02) {
+    return { splitOption: iPaid ? "50/50-me" : "50/50-them", myPercent: "50", customPaidBy: "me" };
+  }
+  if (myShare < 0.02 && iPaid) return { splitOption: "full-me", myPercent: "0", customPaidBy: "me" };
+  if (theirShare < 0.02 && !iPaid) return { splitOption: "full-them", myPercent: "100", customPaidBy: "them" };
+  const myPct = expense.amount > 0 ? Math.round((myShare / expense.amount) * 100) : 50;
+  return { splitOption: "custom", myPercent: String(myPct), customPaidBy: iPaid ? "me" : "them" };
+}
+function formatAmount(n) { return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }); }
+function formatDate(iso) { const d = new Date(iso + "T00:00:00"); return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+
+/* ============================== ICONS ============================== */
+const ICON_X = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>`;
+const ICON_PLUS = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>`;
+const ICON_EDIT = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>`;
+const ICON_TRASH = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>`;
+const ICON_GOOGLE = `<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>`;
+
+/* ============================== STATE ============================== */
+const S = {
+  authenticated: false,
+  tagFilter: null,
+  sheet: null,      // 'add' | 'edit'
+  editId: null,
+  draft: null,
+  submitting: false,
+  error: null,
+  swipeOpen: {},     // id -> 'edit' | 'delete' | null
+  pull: { y: 0, refreshing: false },
+};
+
+function render() {
+  document.getElementById("phone").innerHTML = S.authenticated ? mainScreen() : loginScreen();
+  wire();
+}
+
+/* ============================== LOGIN ============================== */
+function loginScreen() {
+  return `
+  <div class="min-h-full bg-gray-50 flex items-center justify-center px-4" style="height:100%;">
+    <div class="w-full max-w-sm">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+        <h1 class="text-3xl font-bold text-gray-900 mb-1">Hayat</h1>
+        <p class="text-gray-400 text-sm mb-8">Split expenses, stay balanced.</p>
+        <button id="loginBtn" class="flex items-center justify-center gap-3 w-full bg-indigo-600 text-white rounded-xl px-4 py-3 font-medium hover:bg-indigo-700 active:bg-indigo-800 transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">${ICON_GOOGLE}</svg>
+          Sign in with Google
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================== MAIN SCREEN ============================== */
+function balanceBlock() {
+  const b = computeBalance();
+  if (b.direction === "square") {
+    return `<p class="text-sm text-gray-400 mb-0.5">All settled up</p><p class="text-3xl font-bold text-gray-900">You're square</p>`;
+  }
+  if (b.direction === "owed") {
+    return `<p class="text-sm text-gray-400 mb-0.5">${b.otherName} owes you</p><p class="text-3xl font-bold text-gray-900">${formatAmount(b.amount)}</p>`;
+  }
+  return `<p class="text-sm text-gray-400 mb-0.5">You owe ${b.otherName}</p><p class="text-3xl font-bold text-gray-900">${formatAmount(b.amount)}</p>`;
+}
+
+function tagFilterBar() {
+  const chip = (label, value, active) => `
+    <button data-tagchip="${value === null ? "" : value}" class="flex-none text-sm px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${
+      active ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+    }">${label}</button>`;
+  return `<div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4" style="scrollbar-width:none;">
+    ${chip("All", null, S.tagFilter === null)}
+    ${TAGS.map((t) => chip(`${t.emoji} ${t.label}`, tagValue(t), S.tagFilter === tagValue(t))).join("")}
+  </div>`;
+}
+
+function expenseRow(e) {
+  const open = S.swipeOpen[e.id] || null;
+  const tx = open === "edit" ? 72 : open === "delete" ? -72 : 0;
+  return `
+  <div class="relative rounded-xl overflow-hidden" data-row="${e.id}">
+    <div class="absolute inset-y-0 left-0 flex items-center justify-center bg-indigo-500 rounded-l-xl" style="width:72px;">
+      <button data-edit="${e.id}" class="w-full h-full flex items-center justify-center" aria-label="Edit expense">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_EDIT}</svg>
+      </button>
+    </div>
+    <div class="absolute inset-y-0 right-0 flex items-center justify-center bg-red-500 rounded-r-xl" style="width:72px;">
+      <button data-delete="${e.id}" class="w-full h-full flex items-center justify-center" aria-label="Delete expense">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_TRASH}</svg>
+      </button>
+    </div>
+    <div data-content="${e.id}" class="relative bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+      style="touch-action:pan-y; transform:translateX(${tx}px);">
+      <div class="min-w-0">
+        <p class="font-medium text-gray-900 truncate">${e.description}</p>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-xs text-gray-400">${formatDate(e.date)}</span>
+          <span class="text-xs text-gray-300">·</span>
+          <span class="text-xs bg-gray-50 border border-gray-100 text-gray-500 rounded-full px-2 py-0.5 whitespace-nowrap">${e.tag}</span>
+        </div>
+      </div>
+      <div class="text-right flex-none">
+        <p class="font-semibold text-gray-900">${formatAmount(e.amount)}</p>
+        <p class="text-xs text-gray-400">${e.paidBy} paid</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function expenseListBlock() {
+  const filtered = S.tagFilter ? expenses.filter((e) => e.tag === S.tagFilter) : expenses;
+  return `
+    <div class="mb-3" data-region="tag-filter">${tagFilterBar()}</div>
+    ${filtered.length === 0
+      ? `<div class="text-center text-gray-400 text-sm py-12">${S.tagFilter ? "No expenses in this category." : "No expenses yet."}</div>`
+      : `<div class="space-y-2">${filtered.map(expenseRow).join("")}</div>`}
+  `;
+}
+
+function mainScreen() {
+  return `
+  <div class="scroller" id="scroller">
+    <div class="max-w-lg mx-auto min-h-full bg-gray-50 relative">
+      <div class="flex items-center justify-center overflow-hidden" id="pullIndicator" style="height:${S.pull.refreshing ? 72 : S.pull.y}px; transition:height .2s ease;">
+        ${S.pull.y > 10 || S.pull.refreshing
+          ? `<div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full ${S.pull.refreshing ? "animate-spin" : ""}"
+               style="opacity:${S.pull.refreshing ? 1 : S.pull.y / 72};"></div>`
+          : ""}
+      </div>
+
+      <div class="bg-white border-b border-gray-100 px-4 pt-4 pb-5 sticky top-0 z-10">
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-bold text-lg" style="color:#008200;">Hayat</span>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">${ME}</span>
+            <button id="signOutBtn" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">Sign out</button>
+          </div>
+        </div>
+        <div data-region="balance">${balanceBlock()}</div>
+      </div>
+
+      <div class="px-4 py-4 pb-24">${expenseListBlock()}</div>
+
+      <button id="fabBtn" data-region="add-expense" class="fixed bottom-10 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 active:bg-indigo-800 transition-colors z-10" aria-label="Add expense">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PLUS}</svg>
+      </button>
+    </div>
+  </div>
+  ${S.sheet ? sheetOverlay() : ""}
+  `;
+}
+
+/* ============================== ADD / EDIT SHEET ============================== */
+function splitOptionsBlock() {
+  const opts = [
+    { value: "50/50-me", label: "50/50 — I paid" },
+    { value: "50/50-them", label: `50/50 — ${OTHER} paid` },
+    { value: "full-me", label: `I paid — ${OTHER} owes the full amount` },
+    { value: "full-them", label: `${OTHER} paid — I owe the full amount` },
+    { value: "custom", label: "Custom %" },
+  ];
+  return `<div class="flex flex-col gap-1.5">
+    ${opts.map((o) => `
+      <button type="button" data-split="${o.value}" class="w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors ${
+        S.draft.splitOption === o.value ? "bg-indigo-50 border-indigo-300 text-indigo-700 font-medium" : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+      }">${o.label}</button>`).join("")}
+  </div>`;
+}
+
+function sheetOverlay() {
+  const isEdit = S.sheet === "edit";
+  const otherPercent = Math.max(0, 100 - (parseFloat(S.draft.myPercent) || 0));
+  return `
+  <div class="fixed inset-0 bg-black/30 z-20" id="sheetBackdrop"></div>
+  <div class="fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+    <div class="max-w-lg mx-auto px-4 pt-5 pb-8">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold text-gray-900">${isEdit ? "Edit Expense" : "Add Expense"}</h2>
+        <button id="sheetCloseBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-1 -mr-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_X}</svg>
+        </button>
+      </div>
+
+      <form id="expenseForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+          <input id="fDescription" type="text" value="${S.draft.description.replace(/"/g, "&quot;")}" placeholder="e.g. Trader Joes"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        </div>
+
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+            <select id="fTag" class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
+              ${TAGS.map((t) => `<option value="${tagValue(t)}" ${tagValue(t) === S.draft.tag ? "selected" : ""}>${tagValue(t)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="w-32">
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Amount</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+              <input id="fAmount" type="number" step="0.01" value="${S.draft.amount}" placeholder="0.00"
+                class="w-full border border-gray-200 rounded-xl pl-6 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Split</label>
+          ${splitOptionsBlock()}
+        </div>
+
+        ${S.draft.splitOption === "custom" ? `
+          <div class="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Your %</label>
+                <input id="fMyPercent" type="number" min="0" max="100" value="${S.draft.myPercent}"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">${OTHER}'s %</label>
+                <div class="w-full border border-gray-100 bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-500">${otherPercent}</div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Who paid</label>
+              <div class="flex border border-gray-200 rounded-lg overflow-hidden">
+                <button type="button" data-custompaid="me" class="flex-1 py-1.5 text-sm ${S.draft.customPaidBy === "me" ? "bg-indigo-600 text-white" : "bg-white text-gray-600"}">Me</button>
+                <button type="button" data-custompaid="them" class="flex-1 py-1.5 text-sm ${S.draft.customPaidBy === "them" ? "bg-indigo-600 text-white" : "bg-white text-gray-600"}">Your partner</button>
+              </div>
+            </div>
+          </div>` : ""}
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Notes <span class="text-gray-400 font-normal">(optional)</span></label>
+          <input id="fNotes" type="text" value="${S.draft.notes.replace(/"/g, "&quot;")}" placeholder="Add a note"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        </div>
+
+        ${S.error ? `<div class="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">${S.error}</div>` : ""}
+
+        <button type="submit" ${S.submitting ? "disabled" : ""}
+          class="w-full bg-indigo-600 text-white rounded-xl py-3 font-medium text-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          ${S.submitting ? "Saving…" : isEdit ? "Save Changes" : "Add Expense"}
+        </button>
+      </form>
+    </div>
+  </div>`;
+}
+
+/* ============================== ACTIONS ============================== */
+function openAdd() {
+  S.sheet = "add"; S.editId = null; S.error = null; S.submitting = false;
+  S.draft = { description: "", tag: tagValue(TAGS[0]), amount: "", splitOption: "50/50-me", myPercent: "50", customPaidBy: "me", notes: "" };
+  render();
+  document.getElementById("fDescription")?.focus();
+}
+function openEdit(id) {
+  const e = expenses.find((x) => x.id === id);
+  const initial = detectInitialState(e);
+  S.sheet = "edit"; S.editId = id; S.error = null; S.submitting = false;
+  S.draft = { description: e.description, tag: e.tag, amount: String(e.amount), notes: e.notes, ...initial };
+  S.swipeOpen[id] = null;
+  render();
+  document.getElementById("fDescription")?.focus();
+}
+function closeSheet() { S.sheet = null; S.editId = null; S.draft = null; render(); }
+function deleteExpense(id) {
+  const idx = expenses.findIndex((e) => e.id === id);
+  if (idx >= 0) expenses.splice(idx, 1);
+  delete S.swipeOpen[id];
+  render();
+}
+function submitForm() {
+  S.error = null;
+  const amount = parseFloat(S.draft.amount);
+  if (!S.draft.description.trim()) { S.error = "Please enter a description."; render(); return; }
+  if (isNaN(amount) || amount <= 0) { S.error = "Please enter a valid amount."; render(); return; }
+  if (S.draft.splitOption === "custom") {
+    const p = parseFloat(S.draft.myPercent);
+    if (isNaN(p) || p < 0 || p > 100) { S.error = "Custom percentage must be between 0 and 100."; render(); return; }
+  }
+  const shares = computeShares(S.draft.splitOption, amount, parseFloat(S.draft.myPercent) || 0, S.draft.customPaidBy);
+  S.submitting = true;
+  render();
+  setTimeout(() => {
+    if (S.sheet === "edit") {
+      const e = expenses.find((x) => x.id === S.editId);
+      Object.assign(e, { description: S.draft.description.trim(), tag: S.draft.tag, amount, notes: S.draft.notes.trim(), ...shares });
+    } else {
+      expenses.unshift({
+        id: "e" + nextId++, date: ymd(TODAY),
+        description: S.draft.description.trim(), tag: S.draft.tag, amount, notes: S.draft.notes.trim(), ...shares,
+      });
+    }
+    expenses.sort(byDateDesc);
+    closeSheet();
+  }, 350);
+}
+
+/* ============================== WIRING (events not expressible as inline handlers) ============================== */
+const ACTION_WIDTH = 72, REVEAL_THRESHOLD = 40;
+
+function wire() {
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) loginBtn.onclick = () => { S.authenticated = true; render(); };
+
+  const signOutBtn = document.getElementById("signOutBtn");
+  if (signOutBtn) signOutBtn.onclick = () => { S.authenticated = false; render(); };
+
+  const fabBtn = document.getElementById("fabBtn");
+  if (fabBtn) fabBtn.onclick = openAdd;
+
+  document.querySelectorAll("[data-tagchip]").forEach((el) => {
+    el.onclick = () => { S.tagFilter = el.dataset.tagchip || null; render(); };
+  });
+
+  document.querySelectorAll("[data-edit]").forEach((el) => { el.onclick = () => openEdit(el.dataset.edit); });
+  document.querySelectorAll("[data-delete]").forEach((el) => { el.onclick = () => deleteExpense(el.dataset.delete); });
+
+  // swipeable rows (pointer events so it works with mouse drag too, not just touch)
+  document.querySelectorAll("[data-content]").forEach((el) => {
+    const id = el.dataset.content;
+    let startX = 0, base = 0, dragging = false;
+    const apply = (offset, animate) => {
+      el.style.transition = animate ? "transform 0.2s ease" : "none";
+      el.style.transform = `translateX(${offset}px)`;
+    };
+    el.addEventListener("pointerdown", (e) => {
+      dragging = true; startX = e.clientX;
+      base = S.swipeOpen[id] === "edit" ? ACTION_WIDTH : S.swipeOpen[id] === "delete" ? -ACTION_WIDTH : 0;
+      el.setPointerCapture(e.pointerId);
+      el.style.transition = "none";
+    });
+    el.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const next = Math.max(Math.min(base + dx, ACTION_WIDTH), -ACTION_WIDTH);
+      apply(next, false);
+    });
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      const current = new DOMMatrix(getComputedStyle(el).transform).m41;
+      if (current > REVEAL_THRESHOLD) { apply(ACTION_WIDTH, true); S.swipeOpen[id] = "edit"; }
+      else if (current < -REVEAL_THRESHOLD) { apply(-ACTION_WIDTH, true); S.swipeOpen[id] = "delete"; }
+      else { apply(0, true); S.swipeOpen[id] = null; }
+    };
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
+  });
+
+  // pull-to-refresh on the scroll container
+  const scroller = document.getElementById("scroller");
+  if (scroller) {
+    let startY = 0, pulling = false;
+    scroller.addEventListener("pointerdown", (e) => {
+      if (scroller.scrollTop === 0) { startY = e.clientY; pulling = true; }
+    });
+    scroller.addEventListener("pointermove", (e) => {
+      if (!pulling || S.pull.refreshing) return;
+      const dy = e.clientY - startY;
+      if (dy > 0) {
+        S.pull.y = Math.min(dy * 0.5, 72);
+        const ind = document.getElementById("pullIndicator");
+        if (ind) {
+          ind.style.height = S.pull.y + "px";
+          ind.innerHTML = S.pull.y > 10 ? `<div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full" style="opacity:${S.pull.y / 72};"></div>` : "";
+        }
+      }
+    });
+    const endPull = () => {
+      if (!pulling) return;
+      pulling = false;
+      // A plain tap (no drag) leaves S.pull.y at 0 — skip the render entirely then,
+      // instead of just re-setting it to the value it already has. A pointerup
+      // fires before the browser's click event, so an unconditional re-render here
+      // would tear down and rebuild the whole DOM out from under every ordinary
+      // tap in the list (including the button just tapped), before its click event
+      // ever reaches it.
+      if (S.pull.y === 0) return;
+      if (S.pull.y >= 72) {
+        S.pull.refreshing = true; S.pull.y = 0; render();
+        setTimeout(() => { S.pull.refreshing = false; render(); }, 600);
+      } else {
+        S.pull.y = 0; render();
+      }
+    };
+    scroller.addEventListener("pointerup", endPull);
+    scroller.addEventListener("pointercancel", endPull);
+  }
+
+  // sheet
+  const backdrop = document.getElementById("sheetBackdrop");
+  if (backdrop) backdrop.onclick = closeSheet;
+  const closeBtn = document.getElementById("sheetCloseBtn");
+  if (closeBtn) closeBtn.onclick = closeSheet;
+  const form = document.getElementById("expenseForm");
+  if (form) {
+    form.addEventListener("submit", (e) => { e.preventDefault(); submitForm(); });
+    document.getElementById("fDescription").oninput = (e) => { S.draft.description = e.target.value; };
+    document.getElementById("fTag").onchange = (e) => { S.draft.tag = e.target.value; };
+    document.getElementById("fAmount").oninput = (e) => { S.draft.amount = e.target.value; };
+    document.getElementById("fNotes").oninput = (e) => { S.draft.notes = e.target.value; };
+    document.querySelectorAll("[data-split]").forEach((el) => {
+      el.onclick = () => { S.draft.splitOption = el.dataset.split; render(); };
+    });
+    const myPct = document.getElementById("fMyPercent");
+    if (myPct) myPct.oninput = (e) => { S.draft.myPercent = e.target.value; render(); };
+    document.querySelectorAll("[data-custompaid]").forEach((el) => {
+      el.onclick = () => { S.draft.customPaidBy = el.dataset.custompaid; render(); };
+    });
+  }
+}
+
+render();
+
+// Report hovers over specifically-tagged [data-region] elements to the
+// parent page, which shows a callout beside the phone explaining that
+// element. Delegated on document so it survives render() rebuilding the
+// screen's DOM — no listeners to reattach after every re-render.
+(function () {
+  let current = null;
+  document.addEventListener("mouseover", (e) => {
+    const el = e.target.closest("[data-region]");
+    if (!el || el === current) return;
+    current = el;
+    const r = el.getBoundingClientRect();
+    try {
+      window.parent.postMessage({
+        source: "hayat-tracker", type: "demo-region", region: el.dataset.region,
+        rect: { left: r.left, top: r.top, width: r.width, height: r.height }
+      }, "*");
+    } catch (e) {}
+  });
+  document.addEventListener("mouseout", (e) => {
+    if (!current) return;
+    if (current.contains(e.relatedTarget)) return;
+    current = null;
+    try { window.parent.postMessage({ source: "hayat-tracker", type: "demo-region-end" }, "*"); } catch (e) {}
+  });
+})();
+</script>

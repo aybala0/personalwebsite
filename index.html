@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aybala Esmer Personal Website</title>
+
+<!--
+  ============================================================
+  WHAT TO FILL IN (search these markers):
+    [LINK]      → replace href="#" with the real URL
+    [PREVIEW]   → drop a screenshot/GIF path into the data below (img)
+    [COPY]      → replace placeholder writeup text
+  Everything is driven by the PROJECTS + RESEARCH arrays in the
+  <script> at the bottom, so edit content there, not the markup.
+  Deploy: this is a single static file — drop it on Vercel/Netlify.
+  ============================================================
+-->
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#FBFCFA;
+  --surface:#FFFFFF;
+  --sand:#4d5f2a;
+  --ink:#26241B;
+  --muted:#726D5E;
+  --line:#E6E1D2;
+  --accent:#6C6E36;
+  --accent-tint:#5E602E;
+  --tint-ink:#FBFCFA;
+  --tint-muted:#C9CBB2;
+  --maxw:1240px;
+  --display:'Archivo', system-ui, sans-serif;
+  --text:'Public Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--text);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+
+/* ---- nav ---- */
+.nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--paper) 88%, transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;min-height:48px;
+  padding-top:8px;padding-bottom:8px;flex-wrap:wrap;row-gap:4px;}
+.nav-contact{display:flex;flex-wrap:wrap;gap:18px;font-size:13.5px;font-weight:500;color:var(--muted);}
+.nav-contact a{border-bottom:1.5px solid transparent;padding-bottom:1px;transition:border-color .15s,color .15s;}
+.nav-contact a:hover{color:var(--ink);border-color:var(--accent);}
+
+/* ---- generic view ---- */
+.view{display:none;}
+.view.active{display:block;}
+main.wrap{padding-top:50px;padding-bottom:96px;}
+
+/* ---- hero ---- */
+.hero{max-width:none;}
+.hero-top{display:flex;gap:48px;align-items:flex-start;justify-content:space-between;}
+.hero-text{flex:1;min-width:0;max-width:860px;}
+.hero-photo{width:300px;height:300px;object-fit:cover;border-radius:20px;flex-shrink:0;}
+.hero h1{
+  font-family:var(--display);font-weight:700;letter-spacing:-0.02em;line-height:1.05;
+  font-size:clamp(32px,4.5vw,50px);margin:0 0 8px;
+}
+.hero p{font-size:clamp(14px,1.4vw,16px);color:var(--ink);max-width:none;margin:0 0 8px;line-height:1.45;}
+.hero-list{margin:0 0 14px;padding-left:20px;max-width:none;color:var(--ink);font-size:clamp(14px,1.4vw,16px);line-height:1.45;}
+.hero-list li{margin-bottom:1px;}
+
+/* ---- section heading ---- */
+.sec{margin-top:48px;}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;
+  border-bottom:1px solid var(--ink);padding-bottom:10px;margin-bottom:16px;gap:16px;}
+.sec-head h2{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-0.01em;margin:0;}
+.sec-head span{color:var(--muted);font-size:14.5px;}
+
+/* ---- project grid ---- */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.grid-tight{margin-top:28px;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  display:flex;flex-direction:column;transition:border-color .18s;}
+.card:hover{border-color:var(--ink);}
+.preview{aspect-ratio:3/2;background:var(--accent-tint);position:relative;overflow:hidden;
+  border-bottom:1px solid var(--line);}
+.preview img{width:100%;height:100%;object-fit:cover;}
+.preview .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;color:var(--tint-ink);font-family:var(--display);font-weight:700;
+  font-size:22px;letter-spacing:-.01em;text-align:center;padding:0 16px;}
+.preview .ph small{font-family:var(--text);font-weight:500;font-size:12.5px;color:var(--tint-muted);letter-spacing:0;}
+.card-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
+.card-body h3{margin:0;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;}
+.card-body h3 a{border-bottom:2px solid transparent;transition:border-color .15s,color .15s;}
+.card-body h3 a:hover{color:var(--accent);border-color:var(--accent);}
+.card-body .tag{color:var(--muted);font-size:12.5px;font-weight:500;}
+.card-body .desc{font-size:14.5px;line-height:1.5;color:#3a3b3f;margin:0;}
+.card-links{margin-top:auto;padding-top:12px;display:flex;gap:18px;font-size:14.5px;font-weight:600;}
+.card-links a{color:var(--accent);border-bottom:1.5px solid transparent;transition:border-color .15s;}
+.card-links a:hover{border-color:var(--accent);}
+.note{font-size:12.5px;color:var(--muted);font-style:italic;}
+
+/* ---- research strip ---- */
+.rlist{display:flex;flex-direction:column;}
+.ritem{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
+  padding:20px 0;border-bottom:1px solid var(--line);}
+.ritem h3{margin:0 0 4px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;}
+.ritem p{margin:0;color:var(--muted);font-size:15px;max-width:70ch;}
+.ritem .rlink{white-space:nowrap;color:#4d4e26;font-weight:700;font-size:14.5px;
+  text-decoration:underline;text-underline-offset:2px;padding-top:4px;}
+.ritem .rlink:hover{color:var(--ink);}
+
+/* ---- project detail ---- */
+.back{font-weight:600;font-size:14.5px;color:var(--muted);margin-bottom:10px;display:inline-block;}
+.back:hover{color:var(--ink);}
+.code-link{font-weight:600;font-size:13px;color:var(--accent);margin:0 0 20px;display:inline-block;
+  border-bottom:1.5px solid transparent;transition:border-color .15s;}
+.code-link:hover{border-color:var(--accent);}
+.detail h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,40px);
+  letter-spacing:-.02em;margin:0;line-height:1.04;}
+.detail-layout{display:grid;grid-template-columns:minmax(340px,560px) 1fr;gap:32px;align-items:start;}
+.detail-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:14px;flex-wrap:wrap;}
+.detail .lede{font-size:18px;color:var(--muted);margin:0 0 20px;}
+.detail-media{position:sticky;top:64px;}
+.shot{background:var(--accent-tint);border:1px solid var(--line);border-radius:6px;
+  aspect-ratio:var(--shot-ratio,16/9);display:flex;align-items:center;justify-content:center;
+  color:var(--tint-ink);font-family:var(--display);font-weight:700;margin-bottom:12px;
+  overflow:hidden;position:relative;max-width:100%;}
+.shot.phone{background:#111;border:none;border-radius:34px;padding:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);
+  aspect-ratio:auto;width:fit-content;margin:0 auto 12px 22px;}
+.phone-screen{position:relative;overflow:hidden;background:#fff;border-radius:22px;}
+.phone-screen iframe{position:absolute;border:0;display:block;background:var(--surface);}
+.shot iframe{width:100%;height:100%;border:0;display:block;background:var(--surface);}
+.shot.browser{background:#e4e2dd;flex-direction:column;padding:0;}
+.browser-bar{display:flex;align-items:center;gap:14px;padding:9px 12px;background:#ececea;
+  border-bottom:1px solid #d5d3cd;flex-shrink:0;width:100%;}
+.browser-dots{display:flex;gap:6px;flex-shrink:0;}
+.browser-dots span{width:10px;height:10px;border-radius:50%;display:block;}
+.browser-dots span:nth-child(1){background:#ff5f57;}
+.browser-dots span:nth-child(2){background:#febc2e;}
+.browser-dots span:nth-child(3){background:#28c840;}
+.browser-url{flex:1;background:#fff;border:1px solid #d5d3cd;border-radius:6px;padding:4px 10px;
+  font-size:11.5px;color:#666;font-family:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shot.browser iframe{flex:1;width:100%;height:100%;}
+.shot .ph-inner{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 24px;}
+.shot .ph-inner small{font-family:var(--text);font-weight:500;font-size:13px;color:var(--tint-muted);letter-spacing:0;}
+.embed-note{font-size:13px;color:var(--muted);margin:0 0 20px;}
+.click-bubble{position:absolute;top:0;left:0;
+  background:var(--ink);color:var(--paper);font-family:var(--text);font-size:12.5px;font-weight:500;
+  line-height:1.4;padding:8px 11px;border-radius:8px;max-width:180px;box-shadow:0 8px 20px rgba(0,0,0,.25);
+  opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:6;}
+.click-bubble.show{opacity:1;}
+.click-bubble.side-right{transform:translate(0,-50%);}
+.click-bubble.side-left{transform:translate(-100%,-50%);}
+.click-bubble.side-right::after{content:'';position:absolute;top:50%;left:-6px;transform:translateY(-50%);
+  border:6px solid transparent;border-right-color:var(--ink);}
+.click-bubble.side-left::after{content:'';position:absolute;top:50%;right:-6px;transform:translateY(-50%);
+  border:6px solid transparent;border-left-color:var(--ink);}
+.actions-inline{margin-bottom:8px;}
+.btn{display:inline-block;font-weight:600;font-size:15px;padding:11px 20px;border-radius:5px;border:1px solid var(--ink);white-space:nowrap;}
+.btn.primary{background:var(--ink);color:var(--paper);}
+.btn.primary:hover{background:var(--accent);border-color:var(--accent);}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+.detail .body{max-width:66ch;}
+.detail .body h4{font-family:var(--display);font-weight:700;font-size:17px;margin:30px 0 8px;}
+.detail .body p{margin:0 0 14px;color:#3a3b3f;}
+@media (max-width:1080px){
+  .detail-layout{grid-template-columns:1fr;}
+  .detail-media{position:static;max-width:340px;margin:0 auto 12px;}
+}
+
+/* ---- about ---- */
+.about{display:grid;grid-template-columns:220px 1fr;gap:44px;align-items:start;}
+.avatar{aspect-ratio:1;background:var(--accent-tint);border:1px solid var(--line);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;color:var(--tint-ink);
+  font-family:var(--display);font-weight:800;font-size:44px;}
+.about p{max-width:64ch;margin:0 0 16px;}
+.about .interests{color:var(--muted);font-size:15px;}
+
+footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:14px;}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+@media (max-width:1040px){
+  .grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:760px){
+  .grid{grid-template-columns:1fr;}
+  .about{grid-template-columns:1fr;gap:24px;}
+  .avatar{max-width:160px;}
+  main.wrap{padding-top:48px;padding-bottom:72px;}
+  .sec{margin-top:64px;}
+  .hero-top{flex-direction:column-reverse;gap:16px;}
+  .hero-photo{width:96px;height:96px;}
+}
+@media (prefers-reduced-motion:no-preference){
+  .hero{animation:rise .6s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <div class="nav-contact">
+      <a href="mailto:aybala@uchicago.edu">aybala@uchicago.edu</a>
+      <a href="https://www.linkedin.com/in/aybala-esmer-5a725816a/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/aybala0" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HOME -->
+  <section id="home" class="view">
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-text">
+          <h1>Aybala Esmer</h1>
+          <p>Hello! I'm currently a 4th year joint BS/MS student in University of Chicago, studying Computer Science.</p>
+          <p>I will be graduating with both a Bachelors and a Masters in Computer Science, in June 2027.
+          </p>
+          <p>Last year was a great year. Throughout last year, I:</p>
+          <ul class="hero-list">
+            <li>worked part time (20 hr/week) at SteelSeries in the Insights Team,</li>
+            <li>worked part time (15 hr/week) as a Teaching Assistant for intro CS courses, all 3 quarters,</li>
+            <li>went to school, my favorite classes were Operating Systems, Marketing Management, and Introduction to Formal Languages. </li>
+          </ul>
+          <p>This year will even be a greater one. I will:</p>
+          <ul class="hero-list">
+            <li>work part time at Numerator in the Data Extraction team, driving LLM based automation </li>
+            <li>work as the Collaborative Learning Leader for intro CS courses, leading a team of 15 TA's</li>
+            <li>go to school, I'm most excited take Network Systems and a HCI class. </li>
+          </ul>
+        </div>
+        <img class="hero-photo" src="assets/aybala-picture.jpg" alt="Aybala Esmer">
+      </div>
+    </div>
+
+    <div id="grid" class="grid grid-tight"></div>
+
+    <div class="sec">
+      <div class="sec-head"><h2>Research &amp; technical</h2></div>
+      <div id="research" class="rlist"></div>
+    </div>
+  </section>
+
+  <!-- PROJECT DETAIL -->
+  <section id="project" class="view">
+    <a class="back" href="#/">← All work</a>
+    <div id="detail" class="detail"></div>
+  </section>
+
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Aybala Esmer</span>
+    <span>Built and deployed by me by using Claude</span>
+  </div>
+</footer>
+
+<script>
+/* ---------- CONTENT: edit here ---------- */
+const PROJECTS = [
+  {
+    id:"finance",
+    name:"Personal Finance Tracker",
+    tag:"React, Node, Plaid API",
+    desc:"Connects to my bank through Plaid and turns raw transactions into spending I can actually reason about.",
+    img:"assets/finance-tracker.gif",
+    live:null,                // real app is wired to my real bank accounts — kept private
+    embed:"assets/finance-tracker-demo.html", // seeded-data demo, self-contained, no real accounts
+    phoneFrame:true,
+    // The demo's own page renders a fixed 390x780 phone centered in a wider
+    // canvas with 28px top/bottom padding. Rather than shrink that layout to
+    // fit our sidebar (which squishes text), we render the iframe at its
+    // true native size and crop+scale it down to screenSize, so the phone
+    // itself never resizes — only its final display size does.
+    embedNative:{w:420,h:930},           // iframe's own rendered viewport (>= phone + padding, avoids the demo's internal vw/vh caps kicking in)
+    embedCrop:{x:15,y:28,w:390,h:780},   // the phone's exact rect within that viewport
+    screenSize:{w:320,h:640},            // final on-page display size (same 1:2 ratio)
+    embedSource:"finance-tracker", // matches the postMessage source tag in the demo file
+    explainDefault:"This is a live, click-through demo running on seeded data. Hover over highlighted parts of the phone — like the balance numbers or the monthly bar — for a quick explanation, and switch tabs at the bottom to explore Inbox, Categories, and Analysis.",
+    regions:{
+      "add-bank":"Connect another bank or card account via Plaid.",
+      "net-worth":"Checking plus Hayat balance, minus card debt.",
+      "checking":"Total amount of assets across all connected bank accounts.",
+      "cards":"Total amount of credit card debt.",
+      "month-bar":"Snapshot of current monthly spending — shows whether you're under or over pace, based on where you are in the month.",
+      "pie-legend":"This month's spending, broken down by category.",
+      "inbox-teaser":"Shortcut to transactions still waiting to be categorized.",
+      "inbox-rows":"Newly synced transactions — categorize each one, tier first, then category.",
+      "inbox-rules":"Merchant-matching rules pre-fill category and tier for known transactions.",
+      "categories-pie":"Tap a slice to see just that category's transactions.",
+      "categories-month":"Switch to a different month's spending.",
+      "categories-drill":"Every transaction in this category — tap Edit to recategorize.",
+      "analysis-chart":"Spending trend over time — hover a point to see that period's total.",
+      "analysis-controls":"Change the time range and how it's grouped — day, week, or month.",
+      "analysis-categories":"Choose which categories to plot on the chart."
+    },
+    video:null,
+    code:"https://github.com/aybala0/tracker",
+    privacy:"The live app is wired to my real accounts, so it's kept private. The embed below runs on seeded demo data.",
+    lede:"A personal finance app that pulls my real transactions using Plaid API and makes them legible.",  // [COPY]
+    body:[
+      ["The problem", "The spending data from my banks isn't granular enough and doesn't reflect reality — I split a lot of purchases with my partner through a separate app, Hayat. I needed something that gave me the breakdown I actually care about, while still accounting for shared expenses."],
+      ["What I built", "A web app I use daily on my phone. It has fully customizable spending insights, syncs with Hayat for shared purchases, and automatically categorizes incoming transactions using rules I define. I haven't opened a bank app since."]
+  ]
+  },
+  {
+    id:"hayat",
+    name:"Hayat",
+    tag:"React / TypeScript, Node, Google Sheets API",
+    desc:"A two-person expense splitter my partner and I use every day. Splitwise, minus everything we didn't need.",
+    img:"assets/hayat.gif",
+    live:null,                 // real app runs on our real shared-expense data — kept private
+    embed:"assets/hayat-demo.html", // seeded-data demo, self-contained, no real accounts
+    phoneFrame:true,
+    // This artifact's .phone is a fixed 420x860 block (width:420px capped by
+    // 100vw, height:100vh capped by max-height:860px) with no extra body
+    // padding, so unlike the finance demo the crop starts flush at y:0.
+    embedNative:{w:440,h:900},        // >=420 wide and >=860 tall so neither cap kicks in
+    embedCrop:{x:10,y:0,w:420,h:860}, // (440-420)/2=10 side margin from body's margin:0 auto centering
+    screenSize:{w:320,h:655},         // same ~1:2 aspect as the native 420:860
+    embedSource:"hayat-tracker", // must match the postMessage source string in the demo file
+    explainDefault:"This is a live, click-through demo running on seeded data. It opens on a fake sign-in screen — click through it, then hover highlighted parts of the phone for a quick explanation.",
+    regions:{
+      "balance":"Net balance between the two of us, computed from every shared expense.",
+      "tag-filter":"Filter the expense list by category.",
+      "add-expense":"Log a new shared expense — split 50/50, full, or custom."
+    },
+    video:null,
+    code:"https://github.com/aybala0/Hayat",
+    privacy:"The live app runs on our real household data, so it's kept private. The embed below runs on seeded demo data.",
+    lede:"Shared-expense tracking for two people, used daily.",  // [COPY]
+    body:[
+      ["The problem","Me and my partner used to use Splitwise to share daily expenses, but then Splitwise increased monetization efforts with a lot of ads and limiting the number of expenses you can enter daily. That's why I built this app as a custom splitwise for the two of us."],
+      ["What I built","It is a simple web app that we both use on our phones to log shared purchases. It is so simple that it uses a Google Sheets as the database, I also like to be able to see our purchases on a spreadsheet. After I did the personal finance tracking app, this UI became obsolete for me because I now directly create shared purchases from my new personal app. But my boyfriend still uses this app."],
+    ]
+  },
+  {
+    id:"barcode",
+    name:"Barcode Scanner",
+    tag:"JS Camera API, serverless lookup",
+    desc:"Scans UPC/EAN barcodes from your camera and looks up the product. Built in a day at a company hack day.",
+    img:"assets/barcode.gif",
+    live:"https://barcode-nine-chi.vercel.app/",
+    embed:"https://barcode-nine-chi.vercel.app/",
+    phoneFrame:true,
+    // Real responsive site, not a fixed-size mockup — no cropping needed,
+    // just render the iframe at an actual mobile viewport width and let its
+    // own responsive layout do the work. embedCrop = the full native area.
+    embedNative:{w:375,h:812},
+    embedCrop:{x:0,y:0,w:375,h:812},
+    screenSize:{w:300,h:651},
+    video:null,
+    code:"#",                 // [LINK]
+    privacy:"Needs camera access to scan live — grant it in the embed below, or open the live app in its own tab.",
+    lede:"Camera-based product scanner",  // [COPY]
+    body:[
+      ["What I built","Decodes UPC/EAN from a live camera feed in the browser, with a secure serverless product-lookup fallback. I took the lookup fallback mechanism out for demo because it uses an API key the company owns."],
+      ["Context","Shipped in a single day at Numerator's product hack day."]
+    ]
+  },
+  {
+    id:"lades",
+    name:"Lades",
+    tag:"[COPY] add stack",
+    desc:"An automated assassin-style elimination game for group events — email verification, live status, dispute handling.",
+    img:"assets/lades.gif",
+    live:"https://lades-game.vercel.app/",
+    embed:"https://lades-game.vercel.app/",
+    phoneFrame:true,
+    embedNative:{w:375,h:812},
+    embedCrop:{x:0,y:0,w:375,h:812},
+    screenSize:{w:300,h:651},
+    video:null,
+    code:"#",                 // [LINK]
+    privacy:null,
+    lede:"A web app that runs assassin-style elimination games end to end.",  // [COPY]
+    body:[
+      ["Problem","The Turkish Student Association at UChicago needed community building because younger students and older students didn't have any outlet to meet and spend time, younger students were very shy, even when we got together in person."],
+      ["What I built","Based on a Turkish game Lades, this assasin type game takes in signups and automatically manages an elimination game. Players receive email notifications about their targets, they submit that they've eliminated someone from the website, receive daily communication about how many people are still in the game etc. We started playing as 30 people but then people didn't take it seriously, I guess the community wasn't ready for this."]
+    ]
+  }
+];
+
+const RESEARCH = [
+  {
+    title:"Can LLMs judge password strength?",
+    desc:"Co-authored study on whether pretrained LLMs can estimate password strength and give useful feedback. Accepted to IEEE S&P 2026.",
+    link:"https://www.blaseur.com/papers/passllm-sp2026.pdf", linkLabel:"Paper"
+  },
+  {
+    title:"Transformer from scratch",
+    desc:"A sentiment-analysis transformer implemented from the ground up in PyTorch — attention, positional encoding, the works.",
+    link:"#", linkLabel:"Code"    // [LINK]
+  },
+  {
+    title:"A wearable input/output interface learns personalized models of haptic perception ",
+    desc:"This is a project that developed a wearable haptic device that maps individual users' perceptual responses to electrotactile and thermal stimulation, enabling personalized haptic rendering across applications including robot teleoperation, sensory substitution, and VR. The paper is submitted to Science Robotics.",
+    link:null, linkLabel:null
+  }
+];
+
+/* ---------- RENDER ---------- */
+function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
+
+function renderGrid(){
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  PROJECTS.forEach(p=>{
+    const links=[];
+    if(p.video) links.push(`<a href="${p.video}" target="_blank" rel="noopener">Demo video</a>`);
+    if(p.code) links.push(`<a href="${p.code}" target="_blank" rel="noopener">Code</a>`);
+    const preview = p.img
+      ? `<img src="${p.img}" alt="${p.name} preview">`
+      : `<div class="ph">${p.name}<small>${p.embed?'click to open live demo':'add screenshot or demo'}</small></div>`;
+    g.appendChild(el(`
+      <article class="card">
+        <a class="preview" href="#/project/${p.id}" aria-label="Open ${p.name}">${preview}</a>
+        <div class="card-body">
+          <h3><a href="#/project/${p.id}">${p.name}</a></h3>
+          <p class="desc">${p.desc}</p>
+          <div class="card-links">${links.join('')}</div>
+        </div>
+      </article>`));
+  });
+}
+
+function renderResearch(){
+  const r=document.getElementById('research');
+  r.innerHTML='';
+  RESEARCH.forEach(x=>{
+    r.appendChild(el(`
+      <div class="ritem">
+        <div><h3>${x.title}</h3><p>${x.desc}</p></div>
+        ${x.link?`<a class="rlink" href="${x.link}" target="_blank" rel="noopener">${x.linkLabel}</a>`:'<span></span>'}
+      </div>`));
+  });
+}
+
+let currentProject = null;
+
+function phoneScreenHTML(p){
+  const {w:nw,h:nh} = p.embedNative;
+  const {x,y,w:cw,h:ch} = p.embedCrop;
+  const {w:sw,h:sh} = p.screenSize;
+  const scale = sw/cw;
+  return `<div class="phone-screen" style="width:${sw}px;height:${sh}px;">
+    <iframe src="${p.embed}" title="${p.name} live app" loading="lazy" allow="camera" referrerpolicy="no-referrer-when-downgrade"
+      style="width:${nw}px;height:${nh}px;transform:scale(${scale});transform-origin:top left;top:${-y*scale}px;left:${-x*scale}px;"></iframe>
+  </div>`;
+}
+
+function renderDetail(id){
+  const p=PROJECTS.find(x=>x.id===id);
+  currentProject = p;
+  const d=document.getElementById('detail');
+  if(!p){d.innerHTML='<p>Project not found.</p>';return;}
+  const secondaryActions=[];
+  if(p.video) secondaryActions.push(`<a class="btn ghost" href="${p.video}" target="_blank" rel="noopener">Watch demo</a>`);
+  const body=p.body.map(([h,t])=>`<h4>${h}</h4><p>${t}</p>`).join('');
+  const shot = (p.phoneFrame && p.embed)
+    ? phoneScreenHTML(p)
+    : p.embed
+      ? `<div class="browser-bar"><div class="browser-dots"><span></span><span></span><span></span></div><div class="browser-url">${p.embed.replace(/^https?:\/\//,'')}</div></div>
+         <iframe src="${p.embed}" title="${p.name} live app" loading="lazy" allow="camera" referrerpolicy="no-referrer-when-downgrade"></iframe>`
+      : (p.img
+          ? `<img src="${p.img}" alt="${p.name}">`
+          : `<div class="ph-inner">Demo GIF coming soon<small>real app runs on private data, so a screen-recording stands in here</small></div>`);
+  d.innerHTML=`
+    ${p.code?`<a class="code-link" href="${p.code}" target="_blank" rel="noopener">View code</a>`:''}
+    <div class="detail-layout">
+      <div class="detail-media">
+        <div class="shot${(p.phoneFrame && p.embed)?' phone':(p.embed?' browser':'')}" style="--shot-ratio:${p.embedAspect||'16/9'};">${shot}</div>
+      </div>
+      <div class="detail-info">
+        <div class="detail-head-row">
+          <h1>${p.name}</h1>
+        </div>
+        <p class="lede">${p.lede}</p>
+        ${p.privacy?`<div class="note" style="margin-bottom:20px;">${p.privacy}</div>`:''}
+        ${secondaryActions.length?`<div class="actions-inline">${secondaryActions.join('')}</div>`:''}
+        <div class="body">${body}</div>
+      </div>
+    </div>`;
+}
+
+function getOrCreateBubble(media){
+  let bubble = document.getElementById('click-bubble');
+  if(!bubble){
+    bubble = document.createElement('div');
+    bubble.id='click-bubble';
+    bubble.className='click-bubble';
+    media.appendChild(bubble);
+  }
+  return bubble;
+}
+
+const CALLOUT_GAP = 14; // px between the phone bezel and the callout bubble
+
+function showRegionBubble(cp, data){
+  // Callouts only make sense in the wide two-column layout, where there's
+  // room beside the phone; below that breakpoint the media block is static
+  // and centered, so skip rather than let the bubble overlap page content.
+  if(!window.matchMedia('(min-width: 1081px)').matches) return;
+  const media = document.querySelector('.detail-media');
+  const phoneEl = document.querySelector('.shot.phone');
+  const screenEl = document.querySelector('.phone-screen');
+  if(!media || !phoneEl || !screenEl || !cp.regions[data.region]) return;
+  const mediaRect = media.getBoundingClientRect();
+  const phoneRect = phoneEl.getBoundingClientRect();
+  const screenRect = screenEl.getBoundingClientRect();
+  const scale = cp.screenSize.w / cp.embedCrop.w;
+  const centerYNative = data.rect.top + data.rect.height/2;
+  const centerXNative = data.rect.left + data.rect.width/2;
+  const y = (screenRect.top - mediaRect.top) + (centerYNative - cp.embedCrop.y) * scale;
+  const isLeftHalf = (centerXNative - cp.embedCrop.x) < cp.embedCrop.w/2;
+  const side = isLeftHalf ? 'left' : 'right';
+  // Left-side bubbles hang off the phone's left edge and grow further left
+  // (away from the phone, never overlapping it). BUBBLE_MAX_W + SAFE_MARGIN
+  // clamps that leftward growth so it can never run past the browser edge —
+  // in that case the anchor shifts right just enough to stay on-screen.
+  const BUBBLE_MAX_W = 180, SAFE_MARGIN = 16;
+  const x = isLeftHalf
+    ? Math.max((phoneRect.left - mediaRect.left) - CALLOUT_GAP, SAFE_MARGIN - mediaRect.left + BUBBLE_MAX_W)
+    : (phoneRect.right - mediaRect.left) + CALLOUT_GAP;
+
+  const bubble = getOrCreateBubble(media);
+  bubble.textContent = cp.regions[data.region];
+  bubble.style.left = x + 'px';
+  bubble.style.top = y + 'px';
+  bubble.classList.remove('side-left','side-right');
+  bubble.classList.add('side-'+side, 'show');
+}
+
+function hideHoverBubble(){
+  const bubble = document.getElementById('click-bubble');
+  if(bubble) bubble.classList.remove('show');
+}
+
+window.addEventListener('message', (e)=>{
+  const cp = currentProject;
+  if(!cp || !cp.regions || !e.data || e.data.source !== cp.embedSource) return;
+  if(e.data.type === 'demo-region') showRegionBubble(cp, e.data);
+  else if(e.data.type === 'demo-region-end') hideHoverBubble();
+});
+
+/* ---------- ROUTER ---------- */
+const views={home:'home',project:'project'};
+function show(view){
+  Object.values(views).forEach(v=>document.getElementById(v).classList.toggle('active',v===view));
+  window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+}
+function router(){
+  const hash=location.hash.replace(/^#/,'')||'/';
+  if(hash.startsWith('/project/')){
+    renderDetail(hash.split('/')[2]); show('project');
+  }
+  else { show('home'); }
+}
+window.addEventListener('hashchange',router);
+renderGrid(); renderResearch(); router();
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aybala Esmer — Product & builder</title>
+
+<!--
+  ============================================================
+  WHAT TO FILL IN (search these markers):
+    [LINK]      → replace href="#" with the real URL
+    [PREVIEW]   → drop a screenshot/GIF path into the data below (img)
+    [COPY]      → replace placeholder writeup text
+    [RESUME]    → point the download button at your resume PDF
+  Everything is driven by the PROJECTS + RESEARCH arrays in the
+  <script> at the bottom, so edit content there, not the markup.
+  Deploy: this is a single static file — drop it on Vercel/Netlify.
+  ============================================================
+-->
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#FBFCFA;
+  --surface:#FFFFFF;
+  --sand:#DFD3B5;
+  --ink:#26241B;
+  --muted:#726D5E;
+  --line:#E6E1D2;
+  --accent:#6C6E36;
+  --accent-tint:#DFD3B5;
+  --maxw:1240px;
+  --display:'Archivo', system-ui, sans-serif;
+  --text:'Public Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--text);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+
+/* ---- nav ---- */
+.nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--paper) 88%, transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+.nav .wrap{display:flex;align-items:baseline;justify-content:space-between;height:64px;}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-0.01em;}
+.brand a{display:inline-block;}
+.navlinks{display:flex;gap:26px;font-size:15.5px;font-weight:500;}
+.navlinks a{padding-bottom:3px;border-bottom:2px solid transparent;color:var(--muted);transition:color .15s;}
+.navlinks a:hover{color:var(--ink);}
+.navlinks a.active{color:var(--ink);border-color:var(--accent);}
+
+/* ---- generic view ---- */
+.view{display:none;}
+.view.active{display:block;}
+main{padding:72px 0 96px;}
+
+/* ---- hero ---- */
+.hero{max-width:760px;}
+.hero h1{
+  font-family:var(--display);font-weight:700;letter-spacing:-0.02em;line-height:1.05;
+  font-size:clamp(32px,4.5vw,50px);margin:0 0 8px;
+}
+.hero p{font-size:clamp(16px,2vw,19px);color:var(--muted);max-width:60ch;margin:0 0 22px;}
+.meta{display:flex;flex-wrap:wrap;gap:22px;font-weight:500;font-size:15.5px;}
+.meta a{border-bottom:1.5px solid var(--line);padding-bottom:2px;transition:border-color .15s,color .15s;}
+.meta a:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ---- section heading ---- */
+.sec{margin-top:88px;}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;
+  border-bottom:1px solid var(--ink);padding-bottom:10px;margin-bottom:32px;gap:16px;}
+.sec-head h2{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-0.01em;margin:0;}
+.sec-head span{color:var(--muted);font-size:14.5px;}
+
+/* ---- project grid ---- */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  display:flex;flex-direction:column;transition:border-color .18s;}
+.card:hover{border-color:var(--ink);}
+.preview{aspect-ratio:16/10;background:var(--accent-tint);position:relative;overflow:hidden;
+  border-bottom:1px solid var(--line);}
+.preview img{width:100%;height:100%;object-fit:cover;}
+.preview .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;color:var(--ink);font-family:var(--display);font-weight:700;
+  font-size:22px;letter-spacing:-.01em;}
+.preview .ph small{font-family:var(--text);font-weight:500;font-size:12.5px;color:var(--muted);letter-spacing:0;}
+.card-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
+.card-body h3{margin:0;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;}
+.card-body h3 a{border-bottom:2px solid transparent;transition:border-color .15s,color .15s;}
+.card-body h3 a:hover{color:var(--accent);border-color:var(--accent);}
+.card-body .tag{color:var(--muted);font-size:12.5px;font-weight:500;}
+.card-body .desc{font-size:14.5px;line-height:1.5;color:#3a3b3f;margin:0;}
+.card-links{margin-top:auto;padding-top:12px;display:flex;gap:18px;font-size:14.5px;font-weight:600;}
+.card-links a{color:var(--accent);border-bottom:1.5px solid transparent;transition:border-color .15s;}
+.card-links a:hover{border-color:var(--accent);}
+.note{font-size:12.5px;color:var(--muted);font-style:italic;}
+
+/* ---- research strip ---- */
+.rlist{display:flex;flex-direction:column;}
+.ritem{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
+  padding:20px 0;border-bottom:1px solid var(--line);}
+.ritem:first-child{border-top:1px solid var(--line);}
+.ritem h3{margin:0 0 4px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;}
+.ritem p{margin:0;color:var(--muted);font-size:15px;max-width:70ch;}
+.ritem .rlink{white-space:nowrap;color:var(--accent);font-weight:600;font-size:14.5px;
+  border-bottom:1.5px solid transparent;padding-top:4px;}
+.ritem .rlink:hover{border-color:var(--accent);}
+
+/* ---- project detail ---- */
+.back{font-weight:600;font-size:14.5px;color:var(--muted);margin-bottom:26px;display:inline-block;}
+.back:hover{color:var(--ink);}
+.detail h1{font-family:var(--display);font-weight:800;font-size:clamp(32px,5vw,52px);
+  letter-spacing:-.02em;margin:0 0 10px;line-height:1.04;}
+.detail .lede{font-size:19px;color:var(--muted);max-width:62ch;margin:0 0 24px;}
+.detail .stack{font-size:14.5px;color:var(--muted);font-weight:500;margin-bottom:28px;}
+.detail .actions{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:40px;}
+.btn{display:inline-block;font-weight:600;font-size:15px;padding:11px 20px;border-radius:5px;border:1px solid var(--ink);}
+.btn.primary{background:var(--ink);color:var(--paper);}
+.btn.primary:hover{background:var(--accent);border-color:var(--accent);}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+.shot{background:var(--accent-tint);border:1px solid var(--line);border-radius:6px;
+  aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;
+  color:var(--ink);font-family:var(--display);font-weight:700;margin-bottom:36px;}
+.detail .body{max-width:66ch;}
+.detail .body h4{font-family:var(--display);font-weight:700;font-size:17px;margin:30px 0 8px;}
+.detail .body p{margin:0 0 14px;color:#3a3b3f;}
+
+/* ---- resume ---- */
+.resume-head{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:8px;}
+.rblock{padding:22px 0;border-top:1px solid var(--line);}
+.rblock:last-child{border-bottom:1px solid var(--line);}
+.rrow{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.rrow h3{margin:0;font-family:var(--display);font-weight:700;font-size:18px;}
+.rrow .when{color:var(--muted);font-size:14.5px;}
+.rblock ul{margin:8px 0 0;padding-left:18px;color:#3a3b3f;font-size:15.5px;}
+.rblock li{margin-bottom:4px;}
+
+/* ---- about ---- */
+.about{display:grid;grid-template-columns:220px 1fr;gap:44px;align-items:start;}
+.avatar{aspect-ratio:1;background:var(--accent-tint);border:1px solid var(--line);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;color:var(--ink);
+  font-family:var(--display);font-weight:800;font-size:44px;}
+.about p{max-width:64ch;margin:0 0 16px;}
+.about .interests{color:var(--muted);font-size:15px;}
+
+footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:14px;}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+@media (max-width:1040px){
+  .grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:760px){
+  .grid{grid-template-columns:1fr;}
+  .about{grid-template-columns:1fr;gap:24px;}
+  .avatar{max-width:160px;}
+  main{padding:48px 0 72px;}
+  .sec{margin-top:64px;}
+}
+@media (prefers-reduced-motion:no-preference){
+  .hero{animation:rise .6s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <div class="brand"><a href="#/">Aybala Esmer</a></div>
+    <nav class="navlinks">
+      <a href="#/" data-route="/">Work</a>
+      <a href="#/resume" data-route="/resume">Resume</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HOME -->
+  <section id="home" class="view">
+    <div class="hero">
+      <h1>Aybala Esmer</h1>
+      <p>Computer Science, University of Chicago.</p>
+      <div class="meta">
+        <a href="mailto:aybala@uchicago.edu">aybala@uchicago.edu</a>
+        <a href="#" >LinkedIn</a><!-- [LINK] -->
+        <a href="#" >GitHub</a><!-- [LINK] -->
+        <a href="#/resume">Resume</a>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><h2>Selected work</h2><span>live apps — click a title to open the project</span></div>
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><h2>Research &amp; technical</h2><span>not clickable demos — papers &amp; from-scratch builds</span></div>
+      <div id="research" class="rlist"></div>
+    </div>
+  </section>
+
+  <!-- PROJECT DETAIL -->
+  <section id="project" class="view">
+    <a class="back" href="#/">← All work</a>
+    <div id="detail" class="detail"></div>
+  </section>
+
+  <!-- RESUME -->
+  <section id="resume" class="view">
+    <div class="resume-head">
+      <h1 style="font-family:var(--display);font-weight:800;font-size:clamp(32px,5vw,52px);letter-spacing:-.02em;margin:0;">Resume</h1>
+      <a class="btn primary" href="#">Download PDF</a><!-- [RESUME] link your PDF -->
+    </div>
+    <p style="color:var(--muted);max-width:60ch;">The short version is below. Full detail is in the PDF.</p>
+
+    <div style="margin-top:26px;">
+      <div class="rblock">
+        <div class="rrow"><h3>The University of Chicago</h3><span class="when">Expected June 2027</span></div>
+        <div class="tag" style="color:var(--muted);font-size:15px;">B.S. + M.S. in Computer Science (joint BS/MS) · GPA 3.84</div>
+      </div>
+      <div class="rblock">
+        <div class="rrow"><h3>Numerator — Technical Product Management</h3><span class="when">June 2026 – Present</span></div>
+        <ul>
+          <li>Took ownership of the data extraction team's top Q3 initiative (LLM performance analysis) as an intern — full PRD, aligned product + engineering, shipped in 6 weeks.</li>
+          <li>Surfaced a bug driving 37% of failed extractions; modeled $270K in projected annual savings.</li>
+          <li>Converted to a continuing part-time Associate role based on Q3 impact.</li>
+        </ul>
+      </div>
+      <div class="rblock">
+        <div class="rrow"><h3>SteelSeries — Product Strategy &amp; Insights</h3><span class="when">Sept 2025 – Present</span></div>
+        <ul>
+          <li>Designed and analyzed recurring Qualtrics concept surveys distributed to panels of 400,000+.</li>
+          <li>Built the company's first ad-copy A/B testing program; results drove a full messaging repositioning.</li>
+        </ul>
+      </div>
+      <div class="rblock">
+        <div class="rrow"><h3>UChicago CS — Research Assistant</h3><span class="when">May 2025 – Present</span></div>
+        <ul>
+          <li>Co-authored a paper accepted to IEEE S&amp;P 2026 on whether LLMs can estimate password strength.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Aybala Esmer</span>
+    <span>Built and deployed by me — Chicago</span>
+  </div>
+</footer>
+
+<script>
+/* ---------- CONTENT: edit here ---------- */
+const PROJECTS = [
+  {
+    id:"finance",
+    name:"Personal Finance Tracker",
+    tag:"React, Node, Plaid API",
+    desc:"Connects to my bank through Plaid and turns raw transactions into spending I can actually reason about.",
+    img:null,                 // [PREVIEW]
+    live:null,                // no live link — real bank data. Use a demo video instead.
+    video:"#",                // [LINK] demo recording
+    code:"#",                 // [LINK]
+    privacy:"Live wired to my real accounts, so the demo runs on seeded data.",
+    lede:"A personal finance app that pulls my real transactions and makes them legible.",  // [COPY]
+    body:[
+      ["The problem","[COPY] I wanted to see where money actually goes at the item/category level, not just a bank's vague statement view."],
+      ["What I built","[COPY] A full-stack app: Plaid links accounts securely, the backend normalizes and categorizes transactions, and the UI surfaces spending trends and budgets."],
+      ["My role","[COPY] Designed, built, and use it — every day."]
+    ]
+  },
+  {
+    id:"hayat",
+    name:"Hayat",
+    tag:"React / TypeScript, Node, Google Sheets API",
+    desc:"A two-person expense splitter my partner and I use every day. Splitwise, minus everything we didn't need.",
+    img:null,
+    live:"#",                 // [LINK]
+    video:null,
+    code:"#",                 // [LINK]
+    privacy:null,
+    lede:"Shared-expense tracking for two people, used daily.",  // [COPY]
+    body:[
+      ["The problem","[COPY] Existing splitters were bloated for a two-person household."],
+      ["What I built","[COPY] React/TS front end, Node backend, Google Sheets as the store, Google OAuth. Deployed on Vercel + Railway."],
+      ["My role","[COPY] Built it with my partner; it's in real daily use."]
+    ]
+  },
+  {
+    id:"barcode",
+    name:"Barcode Scanner",
+    tag:"JS Camera API, serverless lookup",
+    desc:"Scans UPC/EAN barcodes from your camera and looks up the product. Built in a day at a company hack day.",
+    img:null,
+    live:"#",                 // [LINK]
+    video:"#",                // [LINK] fallback — needs camera permission
+    code:"#",                 // [LINK]
+    privacy:"Needs camera access; the demo clip shows it working if you'd rather not grant it.",
+    lede:"Camera-based product scanner with a serverless lookup fallback.",  // [COPY]
+    body:[
+      ["What I built","[COPY] Decodes UPC/EAN from a live camera feed in the browser, with a secure serverless product-lookup fallback."],
+      ["Context","[COPY] Shipped in a single day at Numerator's hack day; deployed and publicly linkable."]
+    ]
+  },
+  {
+    id:"lades",
+    name:"Lades",
+    tag:"[COPY] add stack",
+    desc:"An automated assassin-style elimination game for group events — email verification, live status, dispute handling.",
+    img:null,
+    live:"#",                 // [LINK]
+    video:null,
+    code:"#",                 // [LINK]
+    privacy:null,
+    lede:"A web app that runs assassin-style elimination games end to end.",  // [COPY]
+    body:[
+      ["What I built","[COPY] Player onboarding with email verification, real-time status updates, and a dispute-resolution flow."],
+      ["Why it matters","[COPY] Now used as a community-building activity."]
+    ]
+  }
+];
+
+const RESEARCH = [
+  {
+    title:"Can LLMs judge password strength?",
+    desc:"Co-authored study on whether pretrained LLMs can estimate password strength and give useful feedback. Accepted to IEEE S&P 2026.",
+    link:"#", linkLabel:"Paper"   // [LINK]
+  },
+  {
+    title:"Transformer from scratch",
+    desc:"A sentiment-analysis transformer implemented from the ground up in PyTorch — attention, positional encoding, the works.",
+    link:"#", linkLabel:"Code"    // [LINK]
+  },
+  {
+    title:"Electrotactile sensory mapping",
+    desc:"[COPY] Hierarchical Gaussian Process research predicting sensory maps from electrode-grid data. [status: in preparation]",
+    link:null, linkLabel:null
+  }
+];
+
+/* ---------- RENDER ---------- */
+function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
+
+function renderGrid(){
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  PROJECTS.forEach(p=>{
+    const links=[];
+    if(p.live) links.push(`<a href="${p.live}" target="_blank" rel="noopener">Live demo</a>`);
+    if(p.video) links.push(`<a href="${p.video}" target="_blank" rel="noopener">Demo video</a>`);
+    if(p.code) links.push(`<a href="${p.code}" target="_blank" rel="noopener">Code</a>`);
+    const preview = p.img
+      ? `<img src="${p.img}" alt="${p.name} preview">`
+      : `<div class="ph">${p.name}<small>add screenshot or demo</small></div>`;
+    g.appendChild(el(`
+      <article class="card">
+        <a class="preview" href="#/project/${p.id}" aria-label="Open ${p.name}">${preview}</a>
+        <div class="card-body">
+          <h3><a href="#/project/${p.id}">${p.name}</a></h3>
+          <div class="tag">${p.tag}</div>
+          <p class="desc">${p.desc}</p>
+          ${p.privacy?`<div class="note">${p.privacy}</div>`:''}
+          <div class="card-links">${links.join('')}</div>
+        </div>
+      </article>`));
+  });
+}
+
+function renderResearch(){
+  const r=document.getElementById('research');
+  r.innerHTML='';
+  RESEARCH.forEach(x=>{
+    r.appendChild(el(`
+      <div class="ritem">
+        <div><h3>${x.title}</h3><p>${x.desc}</p></div>
+        ${x.link?`<a class="rlink" href="${x.link}" target="_blank" rel="noopener">${x.linkLabel}</a>`:'<span></span>'}
+      </div>`));
+  });
+}
+
+function renderDetail(id){
+  const p=PROJECTS.find(x=>x.id===id);
+  const d=document.getElementById('detail');
+  if(!p){d.innerHTML='<p>Project not found.</p>';return;}
+  const actions=[];
+  if(p.live) actions.push(`<a class="btn primary" href="${p.live}" target="_blank" rel="noopener">Open live app</a>`);
+  if(p.video) actions.push(`<a class="btn ghost" href="${p.video}" target="_blank" rel="noopener">Watch demo</a>`);
+  if(p.code) actions.push(`<a class="btn ghost" href="${p.code}" target="_blank" rel="noopener">View code</a>`);
+  const body=p.body.map(([h,t])=>`<h4>${h}</h4><p>${t}</p>`).join('');
+  d.innerHTML=`
+    <h1>${p.name}</h1>
+    <p class="lede">${p.lede}</p>
+    <div class="stack">${p.tag}</div>
+    <div class="actions">${actions.join('')}</div>
+    ${p.privacy?`<div class="note" style="margin-bottom:20px;">${p.privacy}</div>`:''}
+    <div class="shot">${p.img?`<img src="${p.img}" alt="${p.name}">`:'screenshot / demo goes here'}</div>
+    <div class="body">${body}</div>`;
+}
+
+/* ---------- ROUTER ---------- */
+const views={home:'home',resume:'resume',project:'project'};
+function show(view){
+  Object.values(views).forEach(v=>document.getElementById(v).classList.toggle('active',v===view));
+  window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+}
+function setActiveNav(route){
+  document.querySelectorAll('.navlinks a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.route===route);
+  });
+}
+function router(){
+  const hash=location.hash.replace(/^#/,'')||'/';
+  if(hash.startsWith('/project/')){
+    renderDetail(hash.split('/')[2]); show('project'); setActiveNav('/');
+  }else if(hash==='/resume'){ show('resume'); setActiveNav('/resume'); }
+  else { show('home'); setActiveNav('/'); }
+}
+window.addEventListener('hashchange',router);
+renderGrid(); renderResearch(); router();
+</script>
+</body>
+</html>
